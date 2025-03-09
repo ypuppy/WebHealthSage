@@ -25,7 +25,10 @@ export async function analyzeSentiment(text: string): Promise<{
     });
 
     return JSON.parse(response.choices[0].message.content);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.response?.status === 429 || error.message?.includes('quota')) {
+      throw new Error("OpenAI API quota exceeded. Please try again later or check your API key limits.");
+    }
     throw new Error(`Failed to analyze sentiment: ${error.message}`);
   }
 }
@@ -51,7 +54,10 @@ export async function getSEOSuggestions(content: string): Promise<{
     });
 
     return JSON.parse(response.choices[0].message.content);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.response?.status === 429 || error.message?.includes('quota')) {
+      throw new Error("OpenAI API quota exceeded. Please try again later or check your API key limits.");
+    }
     throw new Error(`Failed to get SEO suggestions: ${error.message}`);
   }
 }

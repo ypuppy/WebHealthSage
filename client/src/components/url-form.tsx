@@ -18,7 +18,7 @@ import { useLocation } from "wouter";
 export function UrlForm() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  
+
   const form = useForm({
     resolver: zodResolver(urlSchema),
     defaultValues: {
@@ -34,11 +34,15 @@ export function UrlForm() {
     onSuccess: (data) => {
       setLocation(`/dashboard/${data.websiteId}`);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      const message = error.message.includes('quota') 
+        ? "API quota exceeded. Please try again later."
+        : error.message;
+
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message,
+        title: "Analysis Failed",
+        description: message,
       });
     },
   });
