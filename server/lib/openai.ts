@@ -14,7 +14,7 @@ export async function analyzeSentiment(text: string): Promise<{
       messages: [
         {
           role: "system",
-          content: "Analyze the sentiment and tone of the website content. Provide a score (1-100), overall tone, and suggestions for improvement. Return in JSON format.",
+          content: "Analyze the sentiment and tone of the website content. Provide a score (1-100), overall tone, and suggestions for improvement. Format the response as JSON with the exact keys: score, tone, suggestions.",
         },
         {
           role: "user",
@@ -24,10 +24,27 @@ export async function analyzeSentiment(text: string): Promise<{
       response_format: { type: "json_object" },
     });
 
-    return JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No response content received from OpenAI");
+    }
+
+    const parsed = JSON.parse(content);
+    if (!parsed.score || !parsed.tone || !Array.isArray(parsed.suggestions)) {
+      throw new Error("Invalid response format from OpenAI");
+    }
+
+    return {
+      score: parsed.score,
+      tone: parsed.tone,
+      suggestions: parsed.suggestions,
+    };
   } catch (error: any) {
     if (error?.response?.status === 429 || error.message?.includes('quota')) {
       throw new Error("OpenAI API quota exceeded. Please try again later or check your API key limits.");
+    }
+    if (error?.response?.status === 401) {
+      throw new Error("Invalid OpenAI API key. Please check your API key configuration.");
     }
     throw new Error(`Failed to analyze sentiment: ${error.message}`);
   }
@@ -43,7 +60,7 @@ export async function getSEOSuggestions(content: string): Promise<{
       messages: [
         {
           role: "system",
-          content: "Analyze the website content for SEO issues and provide actionable suggestions. Return in JSON format.",
+          content: "Analyze the website content for SEO issues and provide actionable suggestions. Format the response as JSON with exactly two arrays: 'issues' and 'suggestions'.",
         },
         {
           role: "user",
@@ -53,10 +70,26 @@ export async function getSEOSuggestions(content: string): Promise<{
       response_format: { type: "json_object" },
     });
 
-    return JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No response content received from OpenAI");
+    }
+
+    const parsed = JSON.parse(content);
+    if (!Array.isArray(parsed.issues) || !Array.isArray(parsed.suggestions)) {
+      throw new Error("Invalid response format from OpenAI");
+    }
+
+    return {
+      issues: parsed.issues,
+      suggestions: parsed.suggestions,
+    };
   } catch (error: any) {
     if (error?.response?.status === 429 || error.message?.includes('quota')) {
       throw new Error("OpenAI API quota exceeded. Please try again later or check your API key limits.");
+    }
+    if (error?.response?.status === 401) {
+      throw new Error("Invalid OpenAI API key. Please check your API key configuration.");
     }
     throw new Error(`Failed to get SEO suggestions: ${error.message}`);
   }

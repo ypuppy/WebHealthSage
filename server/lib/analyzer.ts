@@ -3,7 +3,12 @@ import { analyzeSentiment, getSEOSuggestions } from "./openai";
 
 export async function analyzeWebsite(url: string) {
   try {
+    // First validate that we can fetch the URL
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch website: ${response.statusText}`);
+    }
+
     const html = await response.text();
     const $ = load(html);
 
@@ -22,6 +27,9 @@ export async function analyzeWebsite(url: string) {
 
     // Sentiment Analysis
     const visibleText = $("body").text().trim();
+    if (!visibleText) {
+      throw new Error("No visible text content found on the page");
+    }
     const sentimentAnalysis = await analyzeSentiment(visibleText);
 
     return {
@@ -49,6 +57,12 @@ export async function analyzeWebsite(url: string) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('API key')) {
+      throw new Error("OpenAI API key configuration error. Please check your API settings.");
+    }
+    if (errorMessage.includes('quota')) {
+      throw new Error("API quota exceeded. Please try again later.");
+    }
     throw new Error(`Failed to analyze website: ${errorMessage}`);
   }
 }
