@@ -9,6 +9,7 @@ export async function analyzeSentiment(text: string): Promise<{
   suggestions: string[];
 }> {
   try {
+    console.log("Starting sentiment analysis...");
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -29,6 +30,8 @@ export async function analyzeSentiment(text: string): Promise<{
       throw new Error("No response content received from OpenAI");
     }
 
+    console.log("OpenAI response:", responseContent);
+
     const parsed = JSON.parse(responseContent);
     if (!parsed.score || !parsed.tone || !Array.isArray(parsed.suggestions)) {
       throw new Error("Invalid response format from OpenAI");
@@ -40,6 +43,7 @@ export async function analyzeSentiment(text: string): Promise<{
       suggestions: parsed.suggestions,
     };
   } catch (error: any) {
+    console.error("OpenAI API Error:", error);
     if (error?.response?.status === 429 || error.message?.includes('quota')) {
       throw new Error("OpenAI API quota exceeded. Please try again later or check your API key limits.");
     }
@@ -52,6 +56,7 @@ export async function getSEOSuggestions(content: string): Promise<{
   suggestions: string[];
 }> {
   try {
+    console.log("Starting SEO analysis...");
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -72,6 +77,8 @@ export async function getSEOSuggestions(content: string): Promise<{
       throw new Error("No response content received from OpenAI");
     }
 
+    console.log("OpenAI response:", responseContent);
+
     const parsed = JSON.parse(responseContent);
     if (!Array.isArray(parsed.issues) || !Array.isArray(parsed.suggestions)) {
       throw new Error("Invalid response format from OpenAI");
@@ -82,6 +89,7 @@ export async function getSEOSuggestions(content: string): Promise<{
       suggestions: parsed.suggestions,
     };
   } catch (error: any) {
+    console.error("OpenAI API Error:", error);
     if (error?.response?.status === 429 || error.message?.includes('quota')) {
       throw new Error("OpenAI API quota exceeded. Please try again later or check your API key limits.");
     }

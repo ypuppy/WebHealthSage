@@ -1,37 +1,53 @@
-import { load, type CheerioAPI, type Element } from "cheerio";
+import { load, type CheerioAPI } from "cheerio";
 import { analyzeSentiment, getSEOSuggestions } from "./openai";
 
 export async function analyzeWebsite(url: string) {
   try {
+    console.log(`Starting analysis for URL: ${url}`);
+
+    // First validate that we can fetch the URL
+    console.log("Fetching website content...");
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch website: ${response.statusText}`);
     }
 
     const html = await response.text();
+    console.log("Website content fetched successfully");
+
     const $ = load(html);
 
     // Basic SEO Analysis
+    console.log("Starting SEO analysis...");
     const seoScore = calculateSEOScore($);
     const seoDetails = await getSEOSuggestions(html);
+    console.log("SEO analysis completed");
 
     // Performance Analysis
+    console.log("Starting performance analysis...");
     const performanceScore = calculatePerformanceScore($);
+    console.log("Performance analysis completed");
 
     // Security Analysis
+    console.log("Starting security analysis...");
     const securityScore = calculateSecurityScore($, response.headers);
+    console.log("Security analysis completed");
 
     // Accessibility Analysis
+    console.log("Starting accessibility analysis...");
     const accessibilityScore = calculateAccessibilityScore($);
+    console.log("Accessibility analysis completed");
 
     // Sentiment Analysis
+    console.log("Starting sentiment analysis...");
     const visibleText = $("body").text().trim();
     if (!visibleText) {
       throw new Error("No visible text content found on the page");
     }
     const sentimentAnalysis = await analyzeSentiment(visibleText);
+    console.log("Sentiment analysis completed");
 
-    return {
+    const result = {
       seoScore,
       performanceScore,
       securityScore,
@@ -54,7 +70,11 @@ export async function analyzeWebsite(url: string) {
         },
       },
     };
+
+    console.log("Analysis completed successfully");
+    return result;
   } catch (error) {
+    console.error("Analysis failed:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to analyze website: ${errorMessage}`);
   }
