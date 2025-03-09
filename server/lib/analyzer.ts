@@ -1,9 +1,8 @@
-import { load } from "cheerio";
+import { load, type CheerioAPI, type Element } from "cheerio";
 import { analyzeSentiment, getSEOSuggestions } from "./openai";
 
 export async function analyzeWebsite(url: string) {
   try {
-    // First validate that we can fetch the URL
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch website: ${response.statusText}`);
@@ -57,17 +56,11 @@ export async function analyzeWebsite(url: string) {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    if (errorMessage.includes('API key')) {
-      throw new Error("OpenAI API key configuration error. Please check your API settings.");
-    }
-    if (errorMessage.includes('quota')) {
-      throw new Error("API quota exceeded. Please try again later.");
-    }
     throw new Error(`Failed to analyze website: ${errorMessage}`);
   }
 }
 
-function calculateSEOScore($: cheerio.Root): number {
+function calculateSEOScore($: CheerioAPI): number {
   let score = 100;
 
   if (!$("title").length) score -= 10;
@@ -78,7 +71,7 @@ function calculateSEOScore($: cheerio.Root): number {
   return Math.max(0, score);
 }
 
-function calculatePerformanceScore($: cheerio.Root): number {
+function calculatePerformanceScore($: CheerioAPI): number {
   let score = 100;
 
   const scripts = $("script").length;
@@ -93,7 +86,7 @@ function calculatePerformanceScore($: cheerio.Root): number {
   return Math.max(0, score);
 }
 
-function calculateSecurityScore($: cheerio.Root, headers: Headers): number {
+function calculateSecurityScore($: CheerioAPI, headers: Headers): number {
   let score = 100;
 
   if (!headers.get("Content-Security-Policy")) score -= 20;
@@ -103,7 +96,7 @@ function calculateSecurityScore($: cheerio.Root, headers: Headers): number {
   return Math.max(0, score);
 }
 
-function calculateAccessibilityScore($: cheerio.Root): number {
+function calculateAccessibilityScore($: CheerioAPI): number {
   let score = 100;
 
   if ($("img:not([alt])").length > 0) score -= 10;
@@ -113,7 +106,7 @@ function calculateAccessibilityScore($: cheerio.Root): number {
   return Math.max(0, score);
 }
 
-function getPerformanceIssues($: cheerio.Root): string[] {
+function getPerformanceIssues($: CheerioAPI): string[] {
   const issues: string[] = [];
 
   if ($("script").length > 15) {
@@ -129,7 +122,7 @@ function getPerformanceIssues($: cheerio.Root): string[] {
   return issues;
 }
 
-function getPerformanceSuggestions($: cheerio.Root): string[] {
+function getPerformanceSuggestions($: CheerioAPI): string[] {
   const suggestions: string[] = [];
 
   if ($("script").length > 15) {
@@ -177,7 +170,7 @@ function getSecuritySuggestions(headers: Headers): string[] {
   return suggestions;
 }
 
-function getAccessibilityIssues($: cheerio.Root): string[] {
+function getAccessibilityIssues($: CheerioAPI): string[] {
   const issues: string[] = [];
 
   if ($("img:not([alt])").length > 0) {
@@ -193,7 +186,7 @@ function getAccessibilityIssues($: cheerio.Root): string[] {
   return issues;
 }
 
-function getAccessibilitySuggestions($: cheerio.Root): string[] {
+function getAccessibilitySuggestions($: CheerioAPI): string[] {
   const suggestions: string[] = [];
 
   if ($("img:not([alt])").length > 0) {

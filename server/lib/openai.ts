@@ -24,12 +24,12 @@ export async function analyzeSentiment(text: string): Promise<{
       response_format: { type: "json_object" },
     });
 
-    const content = response.choices[0].message.content;
-    if (!content) {
+    const responseContent = response.choices[0].message.content;
+    if (!responseContent) {
       throw new Error("No response content received from OpenAI");
     }
 
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(responseContent);
     if (!parsed.score || !parsed.tone || !Array.isArray(parsed.suggestions)) {
       throw new Error("Invalid response format from OpenAI");
     }
@@ -42,9 +42,6 @@ export async function analyzeSentiment(text: string): Promise<{
   } catch (error: any) {
     if (error?.response?.status === 429 || error.message?.includes('quota')) {
       throw new Error("OpenAI API quota exceeded. Please try again later or check your API key limits.");
-    }
-    if (error?.response?.status === 401) {
-      throw new Error("Invalid OpenAI API key. Please check your API key configuration.");
     }
     throw new Error(`Failed to analyze sentiment: ${error.message}`);
   }
@@ -70,12 +67,12 @@ export async function getSEOSuggestions(content: string): Promise<{
       response_format: { type: "json_object" },
     });
 
-    const content = response.choices[0].message.content;
-    if (!content) {
+    const responseContent = response.choices[0].message.content;
+    if (!responseContent) {
       throw new Error("No response content received from OpenAI");
     }
 
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(responseContent);
     if (!Array.isArray(parsed.issues) || !Array.isArray(parsed.suggestions)) {
       throw new Error("Invalid response format from OpenAI");
     }
@@ -87,9 +84,6 @@ export async function getSEOSuggestions(content: string): Promise<{
   } catch (error: any) {
     if (error?.response?.status === 429 || error.message?.includes('quota')) {
       throw new Error("OpenAI API quota exceeded. Please try again later or check your API key limits.");
-    }
-    if (error?.response?.status === 401) {
-      throw new Error("Invalid OpenAI API key. Please check your API key configuration.");
     }
     throw new Error(`Failed to get SEO suggestions: ${error.message}`);
   }
