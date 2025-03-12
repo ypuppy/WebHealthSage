@@ -15,7 +15,7 @@ export async function analyzeSentiment(text: string): Promise<{
       messages: [
         {
           role: "system",
-          content: "Analyze the sentiment and tone of the website content. Provide a score (1-100), overall tone, and suggestions for improvement. Format the response as JSON with the exact keys: score, tone, suggestions.",
+          content: "You are a website content analyzer. Focus only on analyzing the sentiment and tone of the provided website content. Provide a score (1-100), overall tone description, and specific content improvement suggestions. Do not provide any other type of analysis.",
         },
         {
           role: "user",
@@ -62,7 +62,7 @@ export async function getSEOSuggestions(content: string): Promise<{
       messages: [
         {
           role: "system",
-          content: "Analyze the website content for SEO issues and provide actionable suggestions. Format the response as JSON with exactly two arrays: 'issues' and 'suggestions'.",
+          content: "You are a website SEO analyzer. Focus exclusively on analyzing the website content for SEO issues and providing actionable suggestions. Only look for SEO-related aspects like meta tags, content structure, keywords, and HTML semantics. Do not provide any other type of analysis. Format the response as JSON with exactly two arrays: 'issues' for SEO problems found and 'suggestions' for improvement recommendations.",
         },
         {
           role: "user",

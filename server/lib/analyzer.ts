@@ -1,52 +1,55 @@
 import { load, type CheerioAPI } from "cheerio";
 import { analyzeSentiment, getSEOSuggestions } from "./openai";
 
+function validateResponse(response: Response) {
+  if (!response.ok) {
+    throw new Error(`Failed to fetch website: ${response.statusText}`);
+  }
+}
+
+function validateContent($: CheerioAPI, visibleText: string) {
+  if (!visibleText.trim()) {
+    throw new Error("No visible text content found on the page");
+  }
+
+  if (!$("body").length) {
+    throw new Error("Invalid HTML structure: no body tag found");
+  }
+}
+
 export async function analyzeWebsite(url: string) {
   try {
     console.log(`Starting analysis for URL: ${url}`);
 
-    // First validate that we can fetch the URL
+    // Step 1: Fetch and validate website content
     console.log("Fetching website content...");
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch website: ${response.statusText}`);
-    }
+    validateResponse(response);
 
     const html = await response.text();
     console.log("Website content fetched successfully");
 
     const $ = load(html);
+    const visibleText = $("body").text();
+    validateContent($, visibleText);
 
-    // Basic SEO Analysis
-    console.log("Starting SEO analysis...");
+    // Step 2: Perform technical analysis first (non-AI dependent)
+    console.log("Starting technical analysis...");
     const seoScore = calculateSEOScore($);
-    const seoDetails = await getSEOSuggestions(html);
-    console.log("SEO analysis completed");
-
-    // Performance Analysis
-    console.log("Starting performance analysis...");
     const performanceScore = calculatePerformanceScore($);
-    console.log("Performance analysis completed");
-
-    // Security Analysis
-    console.log("Starting security analysis...");
     const securityScore = calculateSecurityScore($, response.headers);
-    console.log("Security analysis completed");
-
-    // Accessibility Analysis
-    console.log("Starting accessibility analysis...");
     const accessibilityScore = calculateAccessibilityScore($);
-    console.log("Accessibility analysis completed");
+    console.log("Technical analysis completed");
 
-    // Sentiment Analysis
-    console.log("Starting sentiment analysis...");
-    const visibleText = $("body").text().trim();
-    if (!visibleText) {
-      throw new Error("No visible text content found on the page");
-    }
-    const sentimentAnalysis = await analyzeSentiment(visibleText);
-    console.log("Sentiment analysis completed");
+    // Step 3: Get AI-powered insights
+    console.log("Starting AI analysis...");
+    const [seoDetails, sentimentAnalysis] = await Promise.all([
+      getSEOSuggestions(html),
+      analyzeSentiment(visibleText),
+    ]);
+    console.log("AI analysis completed");
 
+    // Step 4: Compile final report
     const result = {
       seoScore,
       performanceScore,
